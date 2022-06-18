@@ -21,9 +21,9 @@ Please review third_party pinning scripts and patches for more details.
 package rwsetutil
 
 import (
+	"github.com/golang/protobuf/proto"
 	"github.com/xiazeyin/fabric-protos-go-gm/ledger/rwset"
 	"github.com/xiazeyin/fabric-protos-go-gm/ledger/rwset/kvrwset"
-	"github.com/golang/protobuf/proto"
 )
 
 /////////////////////////////////////////////////////////////////

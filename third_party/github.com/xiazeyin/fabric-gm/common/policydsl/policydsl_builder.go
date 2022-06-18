@@ -13,9 +13,9 @@ package policydsl
 import (
 	"sort"
 
+	"github.com/golang/protobuf/proto"
 	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
 	mb "github.com/xiazeyin/fabric-protos-go-gm/msp"
-	"github.com/golang/protobuf/proto"
 )
 
 // AcceptAllPolicy always evaluates to true
