@@ -3,10 +3,6 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package signer
 
@@ -14,22 +10,25 @@ import (
 	"crypto"
 	"io"
 
-	"github.com/xiazeyin/gmgo/x509"
 	"github.com/pkg/errors"
-
-	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/common/providers/core"
+	"github.com/xiazeyin/fabric-gm/bccsp"
+	"github.com/xiazeyin/gmgo/x509"
 )
+
+/*
+bccsp/signer/signer.go 定义 bccspCryptoSigner 结构体并为其实现`crypto.Signer`接口
+*/
 
 // bccspCryptoSigner is the BCCSP-based implementation of a crypto.Signer
 type bccspCryptoSigner struct {
-	csp core.CryptoSuite
-	key core.Key
+	csp bccsp.BCCSP
+	key bccsp.Key
 	pk  interface{}
 }
 
 // New returns a new BCCSP-based crypto.Signer
 // for the given BCCSP instance and key.
-func New(csp core.CryptoSuite, key core.Key) (crypto.Signer, error) {
+func New(csp bccsp.BCCSP, key bccsp.Key) (crypto.Signer, error) {
 	// Validate arguments
 	if csp == nil {
 		return nil, errors.New("bccsp instance must be different from nil.")

@@ -19,9 +19,9 @@ import (
 	"hash"
 	"reflect"
 
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/bccsp"
-	flogging "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkpatch/logbridge"
 	"github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-gm/bccsp"
+	"github.com/xiazeyin/fabric-gm/common/flogging"
 )
 
 /*

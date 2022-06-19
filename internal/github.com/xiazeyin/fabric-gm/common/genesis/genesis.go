@@ -3,16 +3,12 @@ Copyright IBM Corp. 2017 All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package genesis
 
 import (
+	"github.com/xiazeyin/fabric-gm/protoutil"
 	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/protoutil"
 )
 
 const (

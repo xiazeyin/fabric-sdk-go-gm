@@ -3,10 +3,6 @@ Copyright IBM Corp All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package operations
 
@@ -17,20 +13,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiazeyin/fabric-config-gm/healthz"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/metrics"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/metrics/disabled"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/metrics/prometheus"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/metrics/statsd"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/metrics/statsd/goruntime"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/util"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/core/middleware"
-	flogging "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkpatch/logbridge"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkpatch/logbridge/httpadmin"
 	http "github.com/xiazeyin/gmgo/gmhttp"
+
+	kitstatsd "github.com/go-kit/kit/metrics/statsd"
+	"github.com/xiazeyin/fabric-config-gm/healthz"
+	"github.com/xiazeyin/fabric-gm/common/flogging"
+	"github.com/xiazeyin/fabric-gm/common/flogging/httpadmin"
+	"github.com/xiazeyin/fabric-gm/common/metadata"
+	"github.com/xiazeyin/fabric-gm/common/metrics"
+	"github.com/xiazeyin/fabric-gm/common/metrics/disabled"
+	"github.com/xiazeyin/fabric-gm/common/metrics/prometheus"
+	"github.com/xiazeyin/fabric-gm/common/metrics/statsd"
+	"github.com/xiazeyin/fabric-gm/common/metrics/statsd/goruntime"
+	"github.com/xiazeyin/fabric-gm/common/util"
+	"github.com/xiazeyin/fabric-gm/core/middleware"
 	tls "github.com/xiazeyin/gmgo/gmtls"
 	"github.com/xiazeyin/gmgo/prometheus/promhttp"
-	kitstatsd "github.com/go-kit/kit/metrics/statsd"
 )
 
 //go:generate counterfeiter -o fakes/logger.go -fake-name Logger . Logger
@@ -90,6 +88,7 @@ func NewSystem(o Options) *System {
 	system.initializeHealthCheckHandler()
 	system.initializeLoggingHandler()
 	system.initializeMetricsProvider()
+	system.initializeVersionInfoHandler()
 
 	return system
 }
@@ -203,6 +202,27 @@ func (s *System) initializeHealthCheckHandler() {
 	s.mux.Handle("/healthz", s.handlerChain(s.healthHandler, false))
 }
 
+func (s *System) initializeVersionInfoHandler() {
+	versionInfo := &VersionInfoHandler{
+		CommitSHA: metadata.CommitSHA,
+		Version:   metadata.Version,
+	}
+	s.mux.Handle("/version", s.handlerChain(versionInfo, false))
+}
+
+// RegisterHandler registers into the ServeMux a handler chain that borrows its security properties from the
+// operations.System. This method is thread safe because ServeMux.Handle() is thread safe, and options are immutable.
+// This method can be called either before or after System.Start(). If the pattern exists the method panics.
+func (s *System) RegisterHandler(pattern string, handler http.Handler) {
+	s.mux.Handle(
+		pattern,
+		s.handlerChain(
+			handler,
+			s.options.TLS.Enabled,
+		),
+	)
+}
+
 func (s *System) startMetricsTickers() error {
 	m := s.options.Metrics
 	if s.statsd != nil {
@@ -222,7 +242,7 @@ func (s *System) startMetricsTickers() error {
 		go goCollector.CollectAndPublish(s.collectorTicker.C)
 
 		s.sendTicker = time.NewTicker(writeInterval)
-		go s.statsd.SendLoop(context.Background(), s.sendTicker.C, network, address)
+		go s.statsd.SendLoop(s.sendTicker.C, network, address)
 	}
 
 	return nil

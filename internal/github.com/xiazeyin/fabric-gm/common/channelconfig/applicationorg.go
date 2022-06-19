@@ -9,9 +9,9 @@ package channelconfig
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
 	pb "github.com/xiazeyin/fabric-protos-go-gm/peer"
-	"github.com/pkg/errors"
 )
 
 const (

@@ -3,25 +3,21 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package msp
 
 import (
 	"bytes"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"fmt"
 	"time"
 
-	"github.com/xiazeyin/gmgo/x509"
-
-	m "github.com/xiazeyin/fabric-protos-go-gm/msp"
-	bccsp "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkpatch/cryptosuitebridge"
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-gm/bccsp"
+	m "github.com/xiazeyin/fabric-protos-go-gm/msp"
+	"github.com/xiazeyin/gmgo/x509"
 )
 
 func (msp *bccspmsp) getCertifiersIdentifier(certRaw []byte) ([]byte, error) {
@@ -84,6 +80,7 @@ func (msp *bccspmsp) getCertifiersIdentifier(certRaw []byte) ([]byte, error) {
 }
 
 func (msp *bccspmsp) setupCrypto(conf *m.FabricMSPConfig) error {
+	// TODO: 调查 IdentityIdentifierHashFunction 的作用，确定是否可以修改为 SM3
 	msp.cryptoConfig = conf.CryptoConfig
 	if msp.cryptoConfig == nil {
 		// Move to defaults
@@ -199,6 +196,24 @@ func (msp *bccspmsp) setupAdminsV142(conf *m.FabricMSPConfig) error {
 	return nil
 }
 
+// TODO 需要改造为判断签名算法是否SM2
+func isECDSASignatureAlgorithm(algid asn1.ObjectIdentifier) bool {
+	// This is the set of ECDSA algorithms supported by Go 1.14 for CRL
+	// signatures.
+	ecdsaSignaureAlgorithms := []asn1.ObjectIdentifier{
+		{1, 2, 840, 10045, 4, 1},    // oidSignatureECDSAWithSHA1
+		{1, 2, 840, 10045, 4, 3, 2}, // oidSignatureECDSAWithSHA256
+		{1, 2, 840, 10045, 4, 3, 3}, // oidSignatureECDSAWithSHA384
+		{1, 2, 840, 10045, 4, 3, 4}, // oidSignatureECDSAWithSHA512
+	}
+	for _, id := range ecdsaSignaureAlgorithms {
+		if id.Equal(algid) {
+			return true
+		}
+	}
+	return false
+}
+
 func (msp *bccspmsp) setupCRLs(conf *m.FabricMSPConfig) error {
 	// setup the CRL (if present)
 	msp.CRL = make([]*pkix.CertificateList, len(conf.RevocationList))
@@ -207,6 +222,20 @@ func (msp *bccspmsp) setupCRLs(conf *m.FabricMSPConfig) error {
 		if err != nil {
 			return errors.Wrap(err, "could not parse RevocationList")
 		}
+
+		// Massage the ECDSA signature values
+		// TODO 需要改造为SM2对应逻辑
+		// if isECDSASignatureAlgorithm(crl.SignatureAlgorithm.Algorithm) {
+		// 	r, s, err := utils.UnmarshalECDSASignature(crl.SignatureValue.RightAlign())
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// 	sig, err := utils.MarshalECDSASignature(r, s)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// 	crl.SignatureValue = asn1.BitString{Bytes: sig, BitLength: 8 * len(sig)}
+		// }
 
 		// TODO: pre-verify the signature on the CRL and create a map
 		//       of CA certs to respective CRLs so that later upon

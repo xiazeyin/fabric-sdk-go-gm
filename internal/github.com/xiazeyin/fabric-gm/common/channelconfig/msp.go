@@ -3,22 +3,18 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package channelconfig
 
 import (
 	"fmt"
 
-	mspprotos "github.com/xiazeyin/fabric-protos-go-gm/msp"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/msp"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/msp/cache"
-	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/common/providers/core"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-gm/bccsp"
+	"github.com/xiazeyin/fabric-gm/msp"
+	"github.com/xiazeyin/fabric-gm/msp/cache"
+	mspprotos "github.com/xiazeyin/fabric-protos-go-gm/msp"
 )
 
 type pendingMSPConfig struct {
@@ -30,10 +26,10 @@ type pendingMSPConfig struct {
 type MSPConfigHandler struct {
 	version msp.MSPVersion
 	idMap   map[string]*pendingMSPConfig
-	bccsp   core.CryptoSuite
+	bccsp   bccsp.BCCSP
 }
 
-func NewMSPConfigHandler(mspVersion msp.MSPVersion, bccsp core.CryptoSuite) *MSPConfigHandler {
+func NewMSPConfigHandler(mspVersion msp.MSPVersion, bccsp bccsp.BCCSP) *MSPConfigHandler {
 	return &MSPConfigHandler{
 		version: mspVersion,
 		idMap:   make(map[string]*pendingMSPConfig),

@@ -13,10 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package msp
 
@@ -28,8 +24,9 @@ import (
 	"math/big"
 	"time"
 
-	// "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/bccsp/utils"
+	// _ "github.com/xiazeyin/fabric-gm/bccsp/utils"
 	"github.com/xiazeyin/gmgo/x509"
+
 	"github.com/pkg/errors"
 )
 
@@ -64,6 +61,14 @@ type tbsCertificate struct {
 	Extensions         []pkix.Extension `asn1:"optional,explicit,tag:3"`
 }
 
+/*func isSM2SignedCert(cert *x509.Certificate) bool {
+	return cert.SignatureAlgorithm == x509.ECDSAWithSHA1 ||
+		cert.SignatureAlgorithm == x509.ECDSAWithSHA256 ||
+		cert.SignatureAlgorithm == x509.ECDSAWithSHA384 ||
+		cert.SignatureAlgorithm == x509.ECDSAWithSHA512
+}
+*/
+//TODO
 func isSM2SignedCert(cert *x509.Certificate) bool {
 	return cert.SignatureAlgorithm == x509.SM2WithSM3
 }

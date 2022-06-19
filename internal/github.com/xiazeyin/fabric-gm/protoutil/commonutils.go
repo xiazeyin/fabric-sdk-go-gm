@@ -3,10 +3,6 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package protoutil
 
@@ -15,11 +11,11 @@ import (
 	"fmt"
 	"time"
 
-	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkinternal/pkg/identity"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-gm/internal/pkg/identity"
+	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
 )
 
 // MarshalOrPanic serializes a protobuf message and panics if this

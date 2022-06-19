@@ -7,13 +7,13 @@ SPDX-License-Identifier: Apache-2.0
 package protoutil
 
 import (
+	"github.com/golang/protobuf/proto"
+	"github.com/pkg/errors"
 	"github.com/xiazeyin/fabric-protos-go-gm/common"
 	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
 	"github.com/xiazeyin/fabric-protos-go-gm/msp"
 	"github.com/xiazeyin/fabric-protos-go-gm/peer"
 	pb "github.com/xiazeyin/fabric-protos-go-gm/peer"
-	"github.com/golang/protobuf/proto"
-	"github.com/pkg/errors"
 )
 
 // the implicit contract of all these unmarshalers is that they

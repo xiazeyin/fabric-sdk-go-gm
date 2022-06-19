@@ -3,10 +3,6 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package goruntime
 
@@ -14,7 +10,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/metrics"
+	"github.com/xiazeyin/fabric-gm/common/metrics"
 )
 
 type Collector struct {

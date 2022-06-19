@@ -19,7 +19,7 @@ package sw
 import (
 	"hash"
 
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/bccsp"
+	"github.com/xiazeyin/fabric-gm/bccsp"
 )
 
 /*

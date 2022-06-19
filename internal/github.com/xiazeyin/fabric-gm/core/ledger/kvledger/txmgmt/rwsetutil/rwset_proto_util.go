@@ -13,17 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package rwsetutil
 
 import (
+	"bytes"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/xiazeyin/fabric-gm/core/ledger/internal/version"
+	"github.com/xiazeyin/fabric-gm/core/ledger/util"
 	"github.com/xiazeyin/fabric-protos-go-gm/ledger/rwset"
 	"github.com/xiazeyin/fabric-protos-go-gm/ledger/rwset/kvrwset"
-	"github.com/golang/protobuf/proto"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -47,6 +47,32 @@ type CollHashedRwSet struct {
 	CollectionName string
 	HashedRwSet    *kvrwset.HashedRWSet
 	PvtRwSetHash   []byte
+}
+
+// GetPvtDataHash returns the PvtRwSetHash for a given namespace and collection
+func (txRwSet *TxRwSet) GetPvtDataHash(ns, coll string) []byte {
+	// we could build and use a map to reduce the number of lookup
+	// in the future call. However, we decided to defer such optimization
+	// due to the following assumptions (mainly to avoid additional LOC).
+	// we assume that the number of namespaces and collections in a txRWSet
+	// to be very minimal (in a single digit),
+	for _, nsRwSet := range txRwSet.NsRwSets {
+		if nsRwSet.NameSpace != ns {
+			continue
+		}
+		return nsRwSet.getPvtDataHash(coll)
+	}
+	return nil
+}
+
+func (nsRwSet *NsRwSet) getPvtDataHash(coll string) []byte {
+	for _, collHashedRwSet := range nsRwSet.CollHashedRwSets {
+		if collHashedRwSet.CollectionName != coll {
+			continue
+		}
+		return collHashedRwSet.PvtRwSetHash
+	}
+	return nil
 }
 
 /////////////////////////////////////////////////////////////////
@@ -208,6 +234,19 @@ func collHashedRwSetFromProtoMsg(protoMsg *rwset.CollectionHashedReadWriteSet) (
 	return colHashedRwSet, nil
 }
 
+func (txRwSet *TxRwSet) NumCollections() int {
+	if txRwSet == nil {
+		return 0
+	}
+	numColls := 0
+	for _, nsRwset := range txRwSet.NsRwSets {
+		for range nsRwset.CollHashedRwSets {
+			numColls++
+		}
+	}
+	return numColls
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // functions for private read-write set
 ///////////////////////////////////////////////////////////////////////////////
@@ -279,4 +318,56 @@ func collPvtRwSetFromProtoMsg(protoMsg *rwset.CollectionPvtReadWriteSet) (*CollP
 		return nil, err
 	}
 	return collPvtRwSet, nil
+}
+
+// NewKVRead helps constructing proto message kvrwset.KVRead
+func NewKVRead(key string, version *version.Height) *kvrwset.KVRead {
+	return &kvrwset.KVRead{Key: key, Version: newProtoVersion(version)}
+}
+
+// NewVersion helps converting proto message kvrwset.Version to version.Height
+func NewVersion(protoVersion *kvrwset.Version) *version.Height {
+	if protoVersion == nil {
+		return nil
+	}
+	return version.NewHeight(protoVersion.BlockNum, protoVersion.TxNum)
+}
+
+func newProtoVersion(height *version.Height) *kvrwset.Version {
+	if height == nil {
+		return nil
+	}
+	return &kvrwset.Version{BlockNum: height.BlockNum, TxNum: height.TxNum}
+}
+
+func newKVWrite(key string, value []byte) *kvrwset.KVWrite {
+	return &kvrwset.KVWrite{Key: key, IsDelete: len(value) == 0, Value: value}
+}
+
+func newPvtKVReadHash(key string, version *version.Height) *kvrwset.KVReadHash {
+	return &kvrwset.KVReadHash{KeyHash: util.ComputeStringHash(key), Version: newProtoVersion(version)}
+}
+
+func newPvtKVWriteAndHash(key string, value []byte) (*kvrwset.KVWrite, *kvrwset.KVWriteHash) {
+	kvWrite := newKVWrite(key, value)
+	var keyHash, valueHash []byte
+	keyHash = util.ComputeStringHash(key)
+	if !kvWrite.IsDelete {
+		valueHash = util.ComputeHash(value)
+	}
+	return kvWrite, &kvrwset.KVWriteHash{KeyHash: keyHash, IsDelete: kvWrite.IsDelete, ValueHash: valueHash}
+}
+
+// IsKVWriteDelete returns true if the kvWrite indicates a delete operation. See FAB-18386 for details.
+func IsKVWriteDelete(kvWrite *kvrwset.KVWrite) bool {
+	return kvWrite.IsDelete || len(kvWrite.Value) == 0
+}
+
+var (
+	hashOfZeroLengthByteArray = util.ComputeHash([]byte{})
+)
+
+// IsKVWriteHashDelete returns true if the kvWriteHash indicates a delete operation. See FAB-18386 for details.
+func IsKVWriteHashDelete(kvWriteHash *kvrwset.KVWriteHash) bool {
+	return kvWriteHash.IsDelete || len(kvWriteHash.ValueHash) == 0 || bytes.Equal(hashOfZeroLengthByteArray, kvWriteHash.ValueHash)
 }

@@ -3,10 +3,6 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package channelconfig
 
@@ -17,10 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-gm/common/capabilities"
 	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
 	ab "github.com/xiazeyin/fabric-protos-go-gm/orderer"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/capabilities"
-	"github.com/pkg/errors"
 )
 
 const (

@@ -3,10 +3,6 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package channelconfig
 
@@ -14,13 +10,12 @@ import (
 	"fmt"
 	"math"
 
-	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/bccsp"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/capabilities"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/util"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/msp"
-	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/common/providers/core"
 	"github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-gm/bccsp"
+	"github.com/xiazeyin/fabric-gm/common/capabilities"
+	"github.com/xiazeyin/fabric-gm/common/util"
+	"github.com/xiazeyin/fabric-gm/msp"
+	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
 )
 
 // Channel config keys
@@ -82,7 +77,7 @@ type ChannelConfig struct {
 }
 
 // NewChannelConfig creates a new ChannelConfig
-func NewChannelConfig(channelGroup *cb.ConfigGroup, bccsp core.CryptoSuite) (*ChannelConfig, error) {
+func NewChannelConfig(channelGroup *cb.ConfigGroup, bccsp bccsp.BCCSP) (*ChannelConfig, error) {
 	cc := &ChannelConfig{
 		protos: &ChannelProtos{},
 	}
@@ -191,6 +186,10 @@ func (cc *ChannelConfig) Validate(channelCapabilities ChannelCapabilities) error
 
 func (cc *ChannelConfig) validateHashingAlgorithm() error {
 	switch cc.protos.HashingAlgorithm.Name {
+	// case bccsp.SHA256:
+	// 	cc.hashingAlgorithm = util.ComputeSHA256
+	// case bccsp.SHA3_256:
+	// 	cc.hashingAlgorithm = util.ComputeSHA3256
 	case bccsp.SM3:
 		cc.hashingAlgorithm = util.ComputeSM3
 	default:

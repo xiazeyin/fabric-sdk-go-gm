@@ -11,10 +11,10 @@ import (
 	"encoding/asn1"
 	"math/big"
 
-	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
-	"github.com/xiazeyin/gmgo/sm3"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
+	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
+	"github.com/xiazeyin/gmgo/sm3"
 )
 
 // NewBlock constructs a block with no data and no metadata.

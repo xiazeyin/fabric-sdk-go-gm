@@ -3,10 +3,6 @@ Copyright DTCC 2016 All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package java
 
@@ -19,10 +15,11 @@ import (
 	"io"
 	"net/url"
 	"regexp"
+	"strings"
 
+	"github.com/xiazeyin/fabric-gm/common/flogging"
+	"github.com/xiazeyin/fabric-gm/core/chaincode/platforms/util"
 	pb "github.com/xiazeyin/fabric-protos-go-gm/peer"
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/core/chaincode/platforms/util"
-	flogging "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkpatch/logbridge"
 )
 
 var logger = flogging.MustGetLogger("chaincode.platform.java")
@@ -119,4 +116,22 @@ func (p *Platform) GetDeploymentPayload(path string) ([]byte, error) {
 	gw.Close()
 
 	return buf.Bytes(), nil
+}
+
+func (p *Platform) GenerateDockerfile() (string, error) {
+	var buf []string
+
+	buf = append(buf, "FROM "+util.GetDockerImageFromConfig("chaincode.java.runtime"))
+	buf = append(buf, "ADD binpackage.tar /root/chaincode-java/chaincode")
+
+	dockerFileContents := strings.Join(buf, "\n")
+
+	return dockerFileContents, nil
+}
+
+func (p *Platform) DockerBuildOptions(path string) (util.DockerBuildOptions, error) {
+	return util.DockerBuildOptions{
+		Image: util.GetDockerImageFromConfig("chaincode.java.runtime"),
+		Cmd:   "./build.sh",
+	}, nil
 }

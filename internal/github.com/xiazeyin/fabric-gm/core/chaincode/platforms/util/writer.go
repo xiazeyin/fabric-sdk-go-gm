@@ -3,10 +3,6 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package util
 
@@ -22,12 +18,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkinternal/ccmetadata"
-	flogging "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkpatch/logbridge"
 	"github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-gm/internal/ccmetadata"
 )
-
-var logger = flogging.MustGetLogger("chaincode.platform.util")
 
 // WriteFolderToTarPackage writes source files to a tarball.
 // This utility is used for node js chaincode packaging, but not golang chaincode.
@@ -35,7 +28,7 @@ var logger = flogging.MustGetLogger("chaincode.platform.util")
 func WriteFolderToTarPackage(tw *tar.Writer, srcPath string, excludeDirs []string, includeFileTypeMap map[string]bool, excludeFileTypeMap map[string]bool) error {
 	rootDirectory := filepath.Clean(srcPath)
 
-	logger.Debug("writing folder to package", "rootDirectory", rootDirectory)
+	logger.Debugw("writing folder to package", "rootDirectory", rootDirectory)
 
 	var success bool
 	walkFn := func(localpath string, info os.FileInfo, err error) error {

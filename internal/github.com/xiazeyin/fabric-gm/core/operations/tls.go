@@ -3,17 +3,13 @@ Copyright IBM Corp All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package operations
 
 import (
 	"io/ioutil"
 
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkinternal/pkg/comm"
+	"github.com/xiazeyin/fabric-gm/internal/pkg/comm"
 	tls "github.com/xiazeyin/gmgo/gmtls"
 	"github.com/xiazeyin/gmgo/x509"
 )

@@ -9,8 +9,8 @@ package policies
 import (
 	"strings"
 
-	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
 	"github.com/pkg/errors"
+	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
 )
 
 func ImplicitMetaFromString(input string) (*cb.ImplicitMetaPolicy, error) {

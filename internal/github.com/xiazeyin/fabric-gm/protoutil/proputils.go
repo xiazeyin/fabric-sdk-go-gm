@@ -10,12 +10,12 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/xiazeyin/fabric-protos-go-gm/common"
-	"github.com/xiazeyin/fabric-protos-go-gm/peer"
-	"github.com/xiazeyin/gmgo/sm3"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-protos-go-gm/common"
+	"github.com/xiazeyin/fabric-protos-go-gm/peer"
+	"github.com/xiazeyin/gmgo/sm3"
 )
 
 // CreateChaincodeProposal creates a proposal from given input.

@@ -11,10 +11,10 @@ import (
 
 	"github.com/xiazeyin/gmgo/sm3"
 
-	"github.com/xiazeyin/fabric-protos-go-gm/common"
-	"github.com/xiazeyin/fabric-protos-go-gm/peer"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-protos-go-gm/common"
+	"github.com/xiazeyin/fabric-protos-go-gm/peer"
 )
 
 // GetPayloads gets the underlying payload objects in a TransactionAction

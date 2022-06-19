@@ -16,8 +16,8 @@ limitations under the License.
 package sw
 
 import (
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/bccsp"
 	"github.com/pkg/errors"
+	"github.com/xiazeyin/fabric-gm/bccsp"
 )
 
 /*

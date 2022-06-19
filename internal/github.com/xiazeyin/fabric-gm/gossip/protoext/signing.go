@@ -10,8 +10,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/xiazeyin/fabric-protos-go-gm/gossip"
 	"github.com/golang/protobuf/proto"
+	"github.com/xiazeyin/fabric-protos-go-gm/gossip"
 )
 
 // Signer signs a message, and returns (signature, nil)

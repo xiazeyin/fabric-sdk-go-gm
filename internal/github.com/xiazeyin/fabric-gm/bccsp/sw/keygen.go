@@ -19,10 +19,9 @@ package sw
 import (
 	"crypto/rand"
 	"fmt"
-
 	"github.com/pkg/errors"
 
-	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/bccsp"
+	"github.com/xiazeyin/fabric-gm/bccsp"
 	"github.com/xiazeyin/gmgo/sm2"
 )
 
@@ -33,6 +32,21 @@ sm2KeyGenerator
 sm4KeyGenerator
 aesKeyGenerator 国密对应时去除
 */
+
+// // ecdsa私钥生成器
+// type ecdsaKeyGenerator struct {
+// 	curve elliptic.Curve
+// }
+
+// // 生成ecdsa私钥
+// func (kg *ecdsaKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
+// 	privKey, err := ecdsa.GenerateKey(kg.curve, rand.Reader)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed generating ECDSA key for [%v]: [%s]", kg.curve, err)
+// 	}
+
+// 	return &ECDSAPrivateKey{privKey}, nil
+// }
 
 // sm2私钥生成器
 type sm2KeyGenerator struct {
@@ -79,3 +93,18 @@ func GetRandomBytes(len int) ([]byte, error) {
 
 	return buffer, nil
 }
+
+// // AES密钥生成器
+// type aesKeyGenerator struct {
+// 	length int
+// }
+
+// // 生成AES密钥
+// func (kg *aesKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
+// 	lowLevelKey, err := GetRandomBytes(int(kg.length))
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed generating AES %d key [%s]", kg.length, err)
+// 	}
+
+// 	return &AESPrivateKey{lowLevelKey, true}, nil
+// }
