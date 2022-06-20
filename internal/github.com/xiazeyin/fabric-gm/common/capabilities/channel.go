@@ -3,12 +3,16 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
+/*
+Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
+Please review third_party pinning scripts and patches for more details.
+*/
 
 package capabilities
 
 import (
-	"github.com/xiazeyin/fabric-gm/msp"
 	cb "github.com/xiazeyin/fabric-protos-go-gm/common"
+	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/msp"
 )
 
 const (

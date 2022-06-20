@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 */
+/*
+Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
+Please review third_party pinning scripts and patches for more details.
+*/
 
 package node
 
@@ -16,11 +20,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
-	"github.com/xiazeyin/fabric-gm/common/flogging"
-	"github.com/xiazeyin/fabric-gm/core/chaincode/platforms/util"
 	pb "github.com/xiazeyin/fabric-protos-go-gm/peer"
+	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/core/chaincode/platforms/util"
+	flogging "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkpatch/logbridge"
 )
 
 var logger = flogging.MustGetLogger("chaincode.platform.node")
@@ -161,31 +164,4 @@ func (p *Platform) GetDeploymentPayload(path string) ([]byte, error) {
 	gw.Close()
 
 	return payload.Bytes(), nil
-}
-
-func (p *Platform) GenerateDockerfile() (string, error) {
-	var buf []string
-
-	buf = append(buf, "FROM "+util.GetDockerImageFromConfig("chaincode.node.runtime"))
-	buf = append(buf, "ADD binpackage.tar /usr/local/src")
-
-	dockerFileContents := strings.Join(buf, "\n")
-
-	return dockerFileContents, nil
-}
-
-var buildScript = `
-set -e
-if [ -x /chaincode/build.sh ]; then
-	/chaincode/build.sh
-else
-	cp -R /chaincode/input/src/. /chaincode/output && cd /chaincode/output && npm install --production
-fi
-`
-
-func (p *Platform) DockerBuildOptions(path string) (util.DockerBuildOptions, error) {
-	return util.DockerBuildOptions{
-		Image: util.GetDockerImageFromConfig("chaincode.node.runtime"),
-		Cmd:   buildScript,
-	}, nil
 }

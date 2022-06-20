@@ -1,6 +1,3 @@
-//go:build !pkcs11
-// +build !pkcs11
-
 /*
 Copyright IBM Corp. All Rights Reserved.
 
@@ -11,7 +8,7 @@ package factory
 
 import (
 	"github.com/pkg/errors"
-	"github.com/xiazeyin/fabric-gm/bccsp"
+	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/bccsp"
 )
 
 /*

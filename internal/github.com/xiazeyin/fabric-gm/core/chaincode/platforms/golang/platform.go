@@ -3,12 +3,12 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
+/*
+Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
+Please review third_party pinning scripts and patches for more details.
+*/
 
 package golang
-
-/*
-core/chaincode/platforms/golang/platform.go 用于编译golang智能合约
-*/
 
 import (
 	"archive/tar"
@@ -27,10 +27,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
-	"github.com/xiazeyin/fabric-gm/core/chaincode/platforms/util"
-	"github.com/xiazeyin/fabric-gm/internal/ccmetadata"
 	pb "github.com/xiazeyin/fabric-protos-go-gm/peer"
+	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/core/chaincode/platforms/util"
+	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkinternal/ccmetadata"
 )
 
 // Platform for chaincodes written in Go
@@ -188,68 +187,6 @@ func (p *Platform) GetDeploymentPayload(codepath string) ([]byte, error) {
 	}
 
 	return payload.Bytes(), nil
-}
-
-func (p *Platform) GenerateDockerfile() (string, error) {
-	var buf []string
-	buf = append(buf, "FROM "+util.GetDockerImageFromConfig("chaincode.golang.runtime"))
-	buf = append(buf, "ADD binpackage.tar /usr/local/bin")
-
-	return strings.Join(buf, "\n"), nil
-}
-
-const staticLDFlagsOpts = "-ldflags \"-linkmode external -extldflags '-static'\""
-const dynamicLDFlagsOpts = ""
-
-func getLDFlagsOpts() string {
-	if viper.GetBool("chaincode.golang.dynamicLink") {
-		return dynamicLDFlagsOpts
-	}
-	return staticLDFlagsOpts
-}
-
-var buildScript = `
-set -e
-go env -w GOPROXY=https://goproxy.cn,direct
-go env -w GOPRIVATE=github.com/xiazeyin
-if [ -f "/chaincode/input/src/go.mod" ] && [ -d "/chaincode/input/src/vendor" ]; then
-    cd /chaincode/input/src
-    GO111MODULE=on go build -v -mod=vendor %[1]s -o /chaincode/output/chaincode %[2]s
-elif [ -f "/chaincode/input/src/go.mod" ]; then
-    cd /chaincode/input/src
-    GO111MODULE=on go build -v -mod=readonly %[1]s -o /chaincode/output/chaincode %[2]s
-elif [ -f "/chaincode/input/src/%[2]s/go.mod" ] && [ -d "/chaincode/input/src/%[2]s/vendor" ]; then
-    cd /chaincode/input/src/%[2]s
-    GO111MODULE=on go build -v -mod=vendor %[1]s -o /chaincode/output/chaincode .
-elif [ -f "/chaincode/input/src/%[2]s/go.mod" ]; then
-    cd /chaincode/input/src/%[2]s
-    GO111MODULE=on go build -v -mod=readonly %[1]s -o /chaincode/output/chaincode .
-else
-    GO111MODULE=off GOPATH=/chaincode/input:$GOPATH go build -v %[1]s -o /chaincode/output/chaincode %[2]s
-fi
-echo Done!
-`
-
-func (p *Platform) DockerBuildOptions(path string) (util.DockerBuildOptions, error) {
-	env := []string{}
-	for _, key := range []string{"GOPROXY", "GOSUMDB"} {
-		if val, ok := os.LookupEnv(key); ok {
-			if key == "GOPROXY" && val != "https://goproxy.cn,direct" {
-				env = append(env, "GOPROXY=https://goproxy.cn,direct")
-			} else {
-				env = append(env, fmt.Sprintf("%s=%s", key, val))
-			}
-			continue
-		}
-		if key == "GOPROXY" {
-			env = append(env, "GOPROXY=https://goproxy.cn,direct")
-		}
-	}
-	ldFlagOpts := getLDFlagsOpts()
-	return util.DockerBuildOptions{
-		Cmd: fmt.Sprintf(buildScript, ldFlagOpts, path),
-		Env: env,
-	}, nil
 }
 
 // CodeDescriptor describes the code we're packaging.

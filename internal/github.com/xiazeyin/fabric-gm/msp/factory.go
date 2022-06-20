@@ -3,12 +3,16 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
+/*
+Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
+Please review third_party pinning scripts and patches for more details.
+*/
 
 package msp
 
 import (
 	"github.com/pkg/errors"
-	"github.com/xiazeyin/fabric-gm/bccsp"
+	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/common/providers/core"
 )
 
 type MSPVersion int
@@ -46,7 +50,7 @@ type IdemixNewOpts struct {
 }
 
 // New create a new MSP instance depending on the passed Opts
-func New(opts NewOpts, cryptoProvider bccsp.BCCSP) (MSP, error) {
+func New(opts NewOpts, cryptoProvider core.CryptoSuite) (MSP, error) {
 	switch opts.(type) {
 	case *BCCSPNewOpts:
 		switch opts.GetVersion() {
@@ -60,17 +64,6 @@ func New(opts NewOpts, cryptoProvider bccsp.BCCSP) (MSP, error) {
 			return newBccspMsp(MSPv1_4_3, cryptoProvider)
 		default:
 			return nil, errors.Errorf("Invalid *BCCSPNewOpts. Version not recognized [%v]", opts.GetVersion())
-		}
-	case *IdemixNewOpts:
-		switch opts.GetVersion() {
-		case MSPv1_4_3:
-			fallthrough
-		case MSPv1_3:
-			return newIdemixMsp(MSPv1_3)
-		case MSPv1_1:
-			return newIdemixMsp(MSPv1_1)
-		default:
-			return nil, errors.Errorf("Invalid *IdemixNewOpts. Version not recognized [%v]", opts.GetVersion())
 		}
 	default:
 		return nil, errors.Errorf("Invalid msp.NewOpts instance. It must be either *BCCSPNewOpts or *IdemixNewOpts. It was [%v]", opts)

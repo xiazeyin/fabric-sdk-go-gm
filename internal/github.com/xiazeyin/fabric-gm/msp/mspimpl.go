@@ -3,25 +3,26 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
+/*
+Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
+Please review third_party pinning scripts and patches for more details.
+*/
 
 package msp
 
 import (
 	"bytes"
 	"crypto/x509/pkix"
-	"encoding/asn1"
 	"encoding/hex"
 	"encoding/pem"
-	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
-	"github.com/xiazeyin/fabric-gm/bccsp"
-	"github.com/xiazeyin/fabric-gm/bccsp/factory"
-	"github.com/xiazeyin/fabric-gm/bccsp/signer"
-	"github.com/xiazeyin/fabric-gm/bccsp/sw"
 	m "github.com/xiazeyin/fabric-protos-go-gm/msp"
-	gmx509 "github.com/xiazeyin/gmgo/x509"
+	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/bccsp/sw"
+	factory "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkpatch/cryptosuitebridge"
+	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/common/providers/core"
+	"github.com/xiazeyin/gmgo/x509"
 )
 
 // mspSetupFuncType is the prototype of the setup function
@@ -80,13 +81,13 @@ type bccspmsp struct {
 	admins []Identity
 
 	// the crypto provider
-	bccsp bccsp.BCCSP
+	bccsp core.CryptoSuite
 
 	// the provider identifier for this MSP
 	name string
 
 	// verification options for MSP members
-	opts *gmx509.VerifyOptions
+	opts *x509.VerifyOptions
 
 	// list of certificate revocation lists
 	CRL []*pkix.CertificateList
@@ -108,7 +109,7 @@ type bccspmsp struct {
 // crypto provider. It handles x.509 certificates and can
 // generate identities and signing identities backed by
 // certificates and keypairs
-func newBccspMsp(version MSPVersion, defaultBCCSP bccsp.BCCSP) (MSP, error) {
+func newBccspMsp(version MSPVersion, defaultBCCSP core.CryptoSuite) (MSP, error) {
 	mspLogger.Debugf("Creating BCCSP-based MSP instance")
 
 	theMsp := &bccspmsp{}
@@ -142,27 +143,7 @@ func newBccspMsp(version MSPVersion, defaultBCCSP bccsp.BCCSP) (MSP, error) {
 	return theMsp, nil
 }
 
-// NewBccspMspWithKeyStore allows to create a BCCSP-based MSP whose underlying
-// crypto material is available through the passed keystore
-func NewBccspMspWithKeyStore(version MSPVersion, keyStore bccsp.KeyStore, bccsp bccsp.BCCSP) (MSP, error) {
-	thisMSP, err := newBccspMsp(version, bccsp)
-	if err != nil {
-		return nil, err
-	}
-
-	csp, err := sw.NewWithParams(true,
-		factory.GetDefaultOpts().SwOpts.SecLevel,
-		factory.GetDefaultOpts().SwOpts.HashFamily,
-		keyStore)
-	if err != nil {
-		return nil, err
-	}
-	thisMSP.(*bccspmsp).bccsp = csp
-
-	return thisMSP, nil
-}
-
-func (msp *bccspmsp) getCertFromPem(idBytes []byte) (*gmx509.Certificate, error) {
+func (msp *bccspmsp) getCertFromPem(idBytes []byte) (*x509.Certificate, error) {
 	if idBytes == nil {
 		return nil, errors.New("getCertFromPem error: nil idBytes")
 	}
@@ -174,27 +155,25 @@ func (msp *bccspmsp) getCertFromPem(idBytes []byte) (*gmx509.Certificate, error)
 	}
 
 	// get a cert
-	var cert *gmx509.Certificate
-	//TODO
-	cert, err := gmx509.ParseCertificate(pemCert.Bytes)
+	var cert *x509.Certificate
+	cert, err := x509.ParseCertificate(pemCert.Bytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "getCertFromPem error: failed to parse SM2 cert")
+		return nil, errors.Wrap(err, "getCertFromPem error: failed to parse x509 cert")
 	}
 
 	return cert, nil
 }
 
-func (msp *bccspmsp) getIdentityFromConf(idBytes []byte) (Identity, bccsp.Key, error) {
+func (msp *bccspmsp) getIdentityFromConf(idBytes []byte) (Identity, core.Key, error) {
 	// get a cert
 	cert, err := msp.getCertFromPem(idBytes)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// TODO: 无脑修改为gmx509的keyInport
 	// get the public key in the right format
-	// certPubK, err := msp.bccsp.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
-	certPubK, err := msp.bccsp.KeyImport(cert, &bccsp.GMX509PublicKeyImportOpts{Temporary: true})
+	// TODO: 国密改造
+	certPubK, err := msp.bccsp.KeyImport(cert, factory.GetGMX509PublicKeyImportOpts(true))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -231,16 +210,15 @@ func (msp *bccspmsp) getSigningIdentityFromConf(sidInfo *m.SigningIdentityInfo) 
 		if pemKey == nil {
 			return nil, errors.Errorf("%s: wrong PEM encoding", sidInfo.PrivateSigner.KeyIdentifier)
 		}
-		// TODO: 无脑修改为sm2的keyInport:
-		// privKey, err = msp.bccsp.KeyImport(pemKey.Bytes, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: true})
-		privKey, err = msp.bccsp.KeyImport(pemKey.Bytes, &bccsp.SM2PrivateKeyImportOpts{Temporary: true})
+		// TODO: 国密改造
+		privKey, err = msp.bccsp.KeyImport(pemKey.Bytes, factory.GetSM2PrivateKeyImportOpts(true))
 		if err != nil {
 			return nil, errors.WithMessage(err, "getIdentityFromBytes error: Failed to import EC private key")
 		}
 	}
 
 	// get the peer signer
-	peerSigner, err := signer.New(msp.bccsp, privKey)
+	peerSigner, err := factory.NewCspSigner(msp.bccsp, privKey)
 	if err != nil {
 		return nil, errors.WithMessage(err, "getIdentityFromBytes error: Failed initializing bccspCryptoSigner")
 	}
@@ -411,7 +389,7 @@ func (msp *bccspmsp) deserializeIdentityInternal(serializedIdentity []byte) (Ide
 	if bl == nil {
 		return nil, errors.New("could not decode the PEM structure")
 	}
-	cert, err := gmx509.ParseCertificate(bl.Bytes)
+	cert, err := x509.ParseCertificate(bl.Bytes)
 	if err != nil {
 		return nil, errors.Wrap(err, "parseCertificate failed")
 	}
@@ -423,9 +401,8 @@ func (msp *bccspmsp) deserializeIdentityInternal(serializedIdentity []byte) (Ide
 	// We can't do it yet because there is no standardized way
 	// (yet) to encode the MSP ID into the x.509 body of a cert
 
-	// TODO: 无脑修改为gmx509的keyInport
-	// pub, err := msp.bccsp.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
-	pub, err := msp.bccsp.KeyImport(cert, &bccsp.GMX509PublicKeyImportOpts{Temporary: true})
+	// TODO: 国密改造
+	pub, err := msp.bccsp.KeyImport(cert, factory.GetGMX509PublicKeyImportOpts(true))
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to import certificate's public key")
 	}
@@ -692,7 +669,7 @@ func (msp *bccspmsp) isInAdmins(id *identity) bool {
 }
 
 // getCertificationChain returns the certification chain of the passed identity within this msp
-func (msp *bccspmsp) getCertificationChain(id Identity) ([]*gmx509.Certificate, error) {
+func (msp *bccspmsp) getCertificationChain(id Identity) ([]*x509.Certificate, error) {
 	mspLogger.Debugf("MSP %s getting certification chain", msp.name)
 
 	switch id := id.(type) {
@@ -707,7 +684,7 @@ func (msp *bccspmsp) getCertificationChain(id Identity) ([]*gmx509.Certificate, 
 }
 
 // getCertificationChainForBCCSPIdentity returns the certification chain of the passed bccsp identity within this msp
-func (msp *bccspmsp) getCertificationChainForBCCSPIdentity(id *identity) ([]*gmx509.Certificate, error) {
+func (msp *bccspmsp) getCertificationChainForBCCSPIdentity(id *identity) ([]*x509.Certificate, error) {
 	if id == nil {
 		return nil, errors.New("Invalid bccsp identity. Must be different from nil.")
 	}
@@ -726,7 +703,7 @@ func (msp *bccspmsp) getCertificationChainForBCCSPIdentity(id *identity) ([]*gmx
 	return msp.getValidationChain(id.cert, false)
 }
 
-func (msp *bccspmsp) getUniqueValidationChain(cert *gmx509.Certificate, opts gmx509.VerifyOptions) ([]*gmx509.Certificate, error) {
+func (msp *bccspmsp) getUniqueValidationChain(cert *x509.Certificate, opts x509.VerifyOptions) ([]*x509.Certificate, error) {
 	// ask golang to validate the cert for us based on the options that we've built at setup time
 	if msp.opts == nil {
 		return nil, errors.New("the supplied identity has no verify options")
@@ -743,108 +720,10 @@ func (msp *bccspmsp) getUniqueValidationChain(cert *gmx509.Certificate, opts gmx
 		return nil, errors.Errorf("this MSP only supports a single validation chain, got %d", len(validationChains))
 	}
 
-	// Make the additional verification checks that were done in Go 1.14.
-	err = verifyLegacyNameConstraints(validationChains[0])
-	if err != nil {
-		return nil, errors.WithMessage(err, "the supplied identity is not valid")
-	}
-
 	return validationChains[0], nil
 }
 
-var (
-	oidExtensionSubjectAltName  = asn1.ObjectIdentifier{2, 5, 29, 17}
-	oidExtensionNameConstraints = asn1.ObjectIdentifier{2, 5, 29, 30}
-)
-
-// verifyLegacyNameConstraints exercises the name constraint validation rules
-// that were part of the certificate verification process in Go 1.14.
-//
-// If a signing certificate contains a name constratint, the leaf certificate
-// does not include SAN extensions, and the leaf's common name looks like a
-// host name, the validation would fail with an x509.CertificateInvalidError
-// and a rason of x509.NameConstraintsWithoutSANs.
-func verifyLegacyNameConstraints(chain []*gmx509.Certificate) error {
-	if len(chain) < 2 {
-		return nil
-	}
-
-	// Leaf certificates with SANs are fine.
-	if oidInExtensions(oidExtensionSubjectAltName, chain[0].Extensions) {
-		return nil
-	}
-	// Leaf certificates without a hostname in CN are fine.
-	if !validHostname(chain[0].Subject.CommonName) {
-		return nil
-	}
-	// If an intermediate or root have a name constraint, validation
-	// would fail in Go 1.14.
-	for _, c := range chain[1:] {
-		if oidInExtensions(oidExtensionNameConstraints, c.Extensions) {
-			return gmx509.CertificateInvalidError{Cert: chain[0], Reason: gmx509.NameConstraintsWithoutSANs}
-		}
-	}
-	return nil
-}
-
-func oidInExtensions(oid asn1.ObjectIdentifier, exts []pkix.Extension) bool {
-	for _, ext := range exts {
-		if ext.Id.Equal(oid) {
-			return true
-		}
-	}
-	return false
-}
-
-// validHostname reports whether host is a valid hostname that can be matched or
-// matched against according to RFC 6125 2.2, with some leniency to accommodate
-// legacy values.
-//
-// This implementation is sourced from the standaard library.
-func validHostname(host string) bool {
-	host = strings.TrimSuffix(host, ".")
-
-	if len(host) == 0 {
-		return false
-	}
-
-	for i, part := range strings.Split(host, ".") {
-		if part == "" {
-			// Empty label.
-			return false
-		}
-		if i == 0 && part == "*" {
-			// Only allow full left-most wildcards, as those are the only ones
-			// we match, and matching literal '*' characters is probably never
-			// the expected behavior.
-			continue
-		}
-		for j, c := range part {
-			if 'a' <= c && c <= 'z' {
-				continue
-			}
-			if '0' <= c && c <= '9' {
-				continue
-			}
-			if 'A' <= c && c <= 'Z' {
-				continue
-			}
-			if c == '-' && j != 0 {
-				continue
-			}
-			if c == '_' || c == ':' {
-				// Not valid characters in hostnames, but commonly
-				// found in deployments outside the WebPKI.
-				continue
-			}
-			return false
-		}
-	}
-
-	return true
-}
-
-func (msp *bccspmsp) getValidationChain(cert *gmx509.Certificate, isIntermediateChain bool) ([]*gmx509.Certificate, error) {
+func (msp *bccspmsp) getValidationChain(cert *x509.Certificate, isIntermediateChain bool) ([]*x509.Certificate, error) {
 	validationChain, err := msp.getUniqueValidationChain(cert, msp.getValidityOptsForCert(cert))
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed getting validation chain")
@@ -868,7 +747,7 @@ func (msp *bccspmsp) getValidationChain(cert *gmx509.Certificate, isIntermediate
 }
 
 // getCertificationChainIdentifier returns the certification chain identifier of the passed identity within this msp.
-// The identifier is computes as the SHA256 of the concatenation of the certificates in the chain.
+// The identifier is computes as the SM3 of the concatenation of the certificates in the chain.
 func (msp *bccspmsp) getCertificationChainIdentifier(id Identity) ([]byte, error) {
 	chain, err := msp.getCertificationChain(id)
 	if err != nil {
@@ -880,10 +759,10 @@ func (msp *bccspmsp) getCertificationChainIdentifier(id Identity) ([]byte, error
 	return msp.getCertificationChainIdentifierFromChain(chain[1:])
 }
 
-func (msp *bccspmsp) getCertificationChainIdentifierFromChain(chain []*gmx509.Certificate) ([]byte, error) {
+func (msp *bccspmsp) getCertificationChainIdentifierFromChain(chain []*x509.Certificate) ([]byte, error) {
 	// Hash the chain
 	// Use the hash of the identity's certificate as id in the IdentityIdentifier
-	hashOpt, err := bccsp.GetHashOpt(msp.cryptoConfig.IdentityIdentifierHashFunction)
+	hashOpt, err := factory.GetHashOpt(msp.cryptoConfig.IdentityIdentifierHashFunction)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed getting hash function options")
 	}
@@ -901,7 +780,7 @@ func (msp *bccspmsp) getCertificationChainIdentifierFromChain(chain []*gmx509.Ce
 // sanitizeCert ensures that x509 certificates signed using ECDSA
 // do have signatures in Low-S. If this is not the case, the certificate
 // is regenerated to have a Low-S signature.
-func (msp *bccspmsp) sanitizeCert(cert *gmx509.Certificate) (*gmx509.Certificate, error) {
+func (msp *bccspmsp) sanitizeCert(cert *x509.Certificate) (*x509.Certificate, error) {
 	// 国密x509证书在fabric中只使用sm2，不需要ecdsa的Low-S检查与对应。
 	// if isECDSASignedCert(cert) {
 	// 	// Lookup for a parent certificate to perform the sanitization
@@ -949,7 +828,7 @@ func (msp *bccspmsp) IsWellFormed(identity *m.SerializedIdentity) error {
 	if bl.Type != "CERTIFICATE" && bl.Type != "" {
 		return errors.Errorf("pem type is %s, should be 'CERTIFICATE' or missing", bl.Type)
 	}
-	cert, err := gmx509.ParseCertificate(bl.Bytes)
+	cert, err := x509.ParseCertificate(bl.Bytes)
 	if err != nil {
 		return err
 	}

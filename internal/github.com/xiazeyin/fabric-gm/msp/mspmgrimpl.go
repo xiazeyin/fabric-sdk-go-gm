@@ -3,14 +3,18 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
+/*
+Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
+Please review third_party pinning scripts and patches for more details.
+*/
 
 package msp
 
 import (
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
-	"github.com/xiazeyin/fabric-gm/common/flogging"
 	"github.com/xiazeyin/fabric-protos-go-gm/msp"
+	flogging "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/sdkpatch/logbridge"
 )
 
 var mspLogger = flogging.MustGetLogger("msp")
@@ -88,8 +92,6 @@ func (mgr *mspManagerImpl) DeserializeIdentity(serializedID []byte) (Identity, e
 
 	switch t := msp.(type) {
 	case *bccspmsp:
-		return t.deserializeIdentityInternal(sId.IdBytes)
-	case *idemixmsp:
 		return t.deserializeIdentityInternal(sId.IdBytes)
 	default:
 		return t.DeserializeIdentity(serializedID)

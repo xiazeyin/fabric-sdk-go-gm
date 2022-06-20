@@ -3,6 +3,10 @@ Copyright IBM Corp All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
+/*
+Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
+Please review third_party pinning scripts and patches for more details.
+*/
 
 package discovery
 
@@ -10,7 +14,7 @@ import (
 	"encoding/hex"
 	"sync"
 
-	"github.com/xiazeyin/fabric-gm/common/util"
+	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/common/util"
 )
 
 // MemoizeSigner signs messages with the same signature
@@ -93,5 +97,5 @@ func (ms *MemoizeSigner) evictFromMemory() {
 
 // msgDigest returns a digest of a given message
 func msgDigest(msg []byte) string {
-	return hex.EncodeToString(util.ComputeSHA256ButSm3(msg))
+	return hex.EncodeToString(util.ComputeSM3(msg))
 }

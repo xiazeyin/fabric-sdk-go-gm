@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/xiazeyin/fabric-gm/bccsp"
+	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/bccsp"
 	"github.com/xiazeyin/gmgo/sm2"
 )
 
