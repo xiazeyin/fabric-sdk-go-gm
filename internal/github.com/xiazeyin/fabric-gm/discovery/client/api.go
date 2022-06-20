@@ -13,7 +13,6 @@ package discovery
 import (
 	"github.com/pkg/errors"
 	"github.com/xiazeyin/fabric-protos-go-gm/discovery"
-	"github.com/xiazeyin/fabric-protos-go-gm/peer"
 	"github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/gossip/protoext"
 	"github.com/xiazeyin/gmgo/grpc"
 )
@@ -45,7 +44,7 @@ type ChannelResponse interface {
 	Config() (*discovery.ConfigResult, error)
 
 	// Peers returns a response for a peer membership query, or error if something went wrong
-	Peers(invocationChain ...*peer.ChaincodeCall) ([]*Peer, error)
+	Peers(invocationChain ...*discovery.ChaincodeCall) ([]*Peer, error)
 
 	// Endorsers returns the response for an endorser query for a given
 	// chaincode in a given channel context, or error if something went wrong.
