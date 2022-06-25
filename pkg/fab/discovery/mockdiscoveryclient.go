@@ -8,16 +8,15 @@ package discovery
 
 import (
 	"context"
-	"sync"
-
 	"github.com/xiazeyin/fabric-protos-go-gm/discovery"
 	"github.com/xiazeyin/fabric-protos-go-gm/gossip"
-	"github.com/xiazeyin/fabric-protos-go-gm/peer"
+	"sync"
+
+	"github.com/pkg/errors"
 	discclient "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/discovery/client"
 	gprotoext "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/gossip/protoext"
 	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/common/providers/fab"
 	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/fab/discovery/mocks"
-	"github.com/pkg/errors"
 )
 
 // MockDiscoveryClient implements a mock Discover service
@@ -114,7 +113,7 @@ func (cr *channelResponse) Config() (*discovery.ConfigResult, error) {
 }
 
 // Peers returns a response for a peer membership query, or error if something went wrong
-func (cr *channelResponse) Peers(invocationChain ...*peer.ChaincodeCall) ([]*discclient.Peer, error) {
+func (cr *channelResponse) Peers(invocationChain ...*discovery.ChaincodeCall) ([]*discclient.Peer, error) {
 	return cr.peers, cr.err
 }
 
