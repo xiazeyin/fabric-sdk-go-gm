@@ -10,10 +10,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/xiazeyin/fabric-protos-go-gm/discovery"
 	"strings"
 	"time"
 
-	"github.com/xiazeyin/fabric-protos-go-gm/peer"
+	"github.com/pkg/errors"
 	discclient "github.com/xiazeyin/fabric-sdk-go-gm/internal/github.com/xiazeyin/fabric-gm/discovery/client"
 	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/client/common/random"
 	soptions "github.com/xiazeyin/fabric-sdk-go-gm/pkg/client/common/selection/options"
@@ -29,7 +30,6 @@ import (
 	peerImpl "github.com/xiazeyin/fabric-sdk-go-gm/pkg/fab/peer"
 	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/util/concurrent/lazycache"
 	"github.com/xiazeyin/fabric-sdk-go-gm/pkg/util/concurrent/lazyref"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -300,8 +300,8 @@ func (s *Service) getTargets(ctx contextAPI.Client) ([]fab.PeerConfig, error) {
 	return random.PickRandomNPeerConfigs(chpeers, chConfig.Policies.Discovery.MaxTargets), nil
 }
 
-func asChaincodeInterests(chaincodes []*fab.ChaincodeCall) *peer.ChaincodeInterest {
-	return &peer.ChaincodeInterest{
+func asChaincodeInterests(chaincodes []*fab.ChaincodeCall) *discovery.ChaincodeInterest {
+	return &discovery.ChaincodeInterest{
 		Chaincodes: asInvocationChain(chaincodes),
 	}
 }
@@ -309,7 +309,7 @@ func asChaincodeInterests(chaincodes []*fab.ChaincodeCall) *peer.ChaincodeIntere
 func asInvocationChain(chaincodes []*fab.ChaincodeCall) discclient.InvocationChain {
 	var invocChain discclient.InvocationChain
 	for _, cc := range chaincodes {
-		invocChain = append(invocChain, &peer.ChaincodeCall{
+		invocChain = append(invocChain, &discovery.ChaincodeCall{
 			Name:            cc.ID,
 			CollectionNames: cc.Collections,
 		})
